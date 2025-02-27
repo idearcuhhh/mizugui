@@ -1,0 +1,223 @@
+wait()
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function createStatsGui()
+    local playerGui = player:WaitForChild("PlayerGui")
+
+    local statsGui = Instance.new("ScreenGui")
+    statsGui.Name = "StatsGui"
+    statsGui.Parent = gethui()
+
+    local statsFrame = Instance.new("Frame")
+    statsFrame.Name = "StatsFrame"
+    statsFrame.Size = UDim2.new(0, 350, 0, 275)
+    statsFrame.Position = UDim2.new(1, -360, 0.5, -135)
+    statsFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    statsFrame.BackgroundTransparency = 0.2
+    statsFrame.BorderSizePixel = 0
+    statsFrame.Parent = statsGui
+
+    -- Contour arc-en-ciel
+    local uiGradient = Instance.new("UIGradient")
+    uiGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+    }
+    uiGradient.Rotation = 90
+    uiGradient.Parent = statsFrame
+
+    spawn(function()
+        while statsGui.Parent do
+            for i = 0, 1, 0.01 do
+                uiGradient.Offset = Vector2.new(i, 0)
+                wait(0.05)
+            end
+        end
+    end)
+
+    local playerNameLabel = Instance.new("TextLabel")
+    playerNameLabel.Name = "PlayerNameLabel"
+    playerNameLabel.Text = player.Name
+    playerNameLabel.Size = UDim2.new(0.9, 0, 0, 25)
+    playerNameLabel.Position = UDim2.new(0.05, 0, 0, 5)
+    playerNameLabel.BackgroundTransparency = 1
+    playerNameLabel.TextScaled = true
+    playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playerNameLabel.Font = Enum.Font.SourceSansBold
+    playerNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    playerNameLabel.Parent = statsFrame
+
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Text = "✖"
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -35, 0, 5)
+    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    closeButton.TextScaled = true
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.Font = Enum.Font.SourceSansBold
+    closeButton.Parent = statsFrame
+
+    local labels = {
+        {"RebirthLabel", "Rebirths: 0 / Objectif: 0", 35},
+        {"StatsLabel", "Stats: 0 / 0", 60},
+        {"StatsPerDayLabel", "Stats per Day: 0", 85},
+        {"StatsPerWeekendLabel", "Stats per Weekend: 0", 110},
+        {"StatsPerMonthLabel", "Stats per Month: 0", 135},
+        {"PingLabel", "Ping: 0 ms", 160}
+    }
+
+    local statsElements = {}
+
+    for _, data in ipairs(labels) do
+        local label = Instance.new("TextLabel")
+        label.Name = data[1]
+        label.Text = data[2]
+        label.Size = UDim2.new(0.9, 0, 0, 25)
+        label.Position = UDim2.new(0.05, 0, 0, data[3])
+        label.BackgroundTransparency = 1
+        label.TextScaled = true
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.Font = Enum.Font.SourceSansBold
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = statsFrame
+        table.insert(statsElements, label)
+    end
+
+    -- Fonction pour formater les nombres avec des abréviations
+    local function formatNumber(n)
+        if n >= 1e15 then
+            return string.format("%.2f QD", n / 1e15)
+        elseif n >= 1e12 then
+            return string.format("%.2f T", n / 1e12)
+        elseif n >= 1e9 then
+            return string.format("%.2f B", n / 1e9)
+        elseif n >= 1e6 then
+            return string.format("%.2f M", n / 1e6)
+        elseif n >= 1e3 then
+            return string.format("%.2f K", n / 1e3)
+        else
+            return tostring(n)
+        end
+    end
+
+    -- Fonction pour formater les rebirths avec des points (1.000, 10.000, etc.)
+    local function formatWithDots(n)
+        local formatted = tostring(n)
+        if n >= 1000 then
+            formatted = string.reverse(formatted):gsub("(%d%d%d)", "%1."):reverse():gsub("^%.", "")
+        end
+        return formatted
+    end
+
+    local baseStatsPerWeek = 1.45 * 1e12
+
+    -- Fonction pour déterminer l'objectif suivant en fonction du nombre de rebirths
+    local function getRebirthGoal(rebirthCount)
+        -- Objectifs par intervalles
+        if rebirthCount < 20 then
+            return 20
+        elseif rebirthCount < 50 then
+            return 50
+        elseif rebirthCount < 100 then
+            return 100
+        elseif rebirthCount < 500 then
+            return 500
+        elseif rebirthCount < 1000 then
+            return 1000
+        elseif rebirthCount < 5000 then
+            return 5000
+        elseif rebirthCount < 10000 then
+            return 10000
+        elseif rebirthCount < 15000 then
+            return 15000
+        elseif rebirthCount < 25000 then
+            return 25000
+        elseif rebirthCount < 50000 then
+            return 50000
+        elseif rebirthCount < 100000 then
+            return 100000
+        elseif rebirthCount < 500000 then
+            return 500000
+        else
+            return 500000  -- Objectif final
+        end
+    end
+
+    local function updateStats()
+        while true do
+            wait(0.3)
+
+            local dataFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Datas")
+            if not dataFolder then return end
+
+            local playerData = dataFolder:FindFirstChild(tostring(player.UserId))
+            if not playerData then return end
+
+            local strengthStat = playerData:FindFirstChild("Strength")
+            local rebirthStat = playerData:FindFirstChild("Rebirth")
+
+            local rebirthCount = rebirthStat and rebirthStat.Value or 0
+            local strengthValue = strengthStat and strengthStat.Value or 0
+
+            local multiplier = math.floor(rebirthCount / 50) + 1
+
+            local statsPerWeek = baseStatsPerWeek * multiplier
+            local statsPerDay = statsPerWeek / 7
+            local statsPerMonth = statsPerWeek * 4
+            local statsReq = 2e6 + (2e6 * rebirthCount)
+
+            local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+
+            local rebirthGoal = getRebirthGoal(rebirthCount)
+            statsFrame.RebirthLabel.Text = formatWithDots(rebirthCount) .. " / " .. formatWithDots(rebirthGoal) .. "K"
+            statsFrame.StatsLabel.Text = "Stats: " .. formatNumber(strengthValue) .. " / " .. formatNumber(statsReq)
+            statsFrame.StatsPerDayLabel.Text = "Stats per Day: " .. formatNumber(statsPerDay)
+            statsFrame.StatsPerWeekendLabel.Text = "Stats per Weekend: " .. formatNumber(statsPerWeek)
+            statsFrame.StatsPerMonthLabel.Text = "Stats per Month: " .. formatNumber(statsPerMonth)
+            statsFrame.PingLabel.Text = "Ping: " .. formatWithDots(ping) .. " ms"
+        end
+    end
+
+    spawn(updateStats)
+
+    -- Fonction pour changer la couleur du fond
+    local colorButton = Instance.new("TextButton")
+    colorButton.Text = "Change Color"
+    colorButton.Size = UDim2.new(0, 150, 0, 30)
+    colorButton.Position = UDim2.new(0.05, 0, 0, 190)
+    colorButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    colorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    colorButton.Parent = statsFrame
+
+    -- Logic for the color change button
+    colorButton.MouseButton1Click:Connect(function()
+        local randomColor = Color3.fromHSV(math.random(), 1, 1) -- Random color
+        statsFrame.BackgroundColor3 = randomColor
+    end)
+
+    local guiVisible = true
+    closeButton.MouseButton1Click:Connect(function()
+        if guiVisible then
+            statsFrame:Destroy()  -- Supprime le cadre et tout son contenu
+        else
+            createStatsGui()  -- Récrée le GUI quand on reclique
+        end
+        guiVisible = not guiVisible
+    end)
+end
+
+createStatsGui()
+
+player.CharacterAdded:Connect(function()
+    local existingGui = player.PlayerGui:FindFirstChild("StatsGui")
+    if existingGui then
+        existingGui:Destroy()
+    end
+    createStatsGui()
+end)
