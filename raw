@@ -148,41 +148,48 @@ local function createStatsGui()
             return 500000  -- Objectif final
         end
     end
+local function updateStats()
+    while true do
+        wait(0.3)
 
-    local function updateStats()
-        while true do
-            wait(0.3)
+        local dataFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Datas")
+        if not dataFolder then return end
 
-            local dataFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Datas")
-            if not dataFolder then return end
+        local playerData = dataFolder:FindFirstChild(tostring(player.UserId))
+        if not playerData then return end
 
-            local playerData = dataFolder:FindFirstChild(tostring(player.UserId))
-            if not playerData then return end
+        local strengthStat = playerData:FindFirstChild("Strength")
+        local rebirthStat = playerData:FindFirstChild("Rebirth")
 
-            local strengthStat = playerData:FindFirstChild("Strength")
-            local rebirthStat = playerData:FindFirstChild("Rebirth")
+        local rebirthCount = rebirthStat and rebirthStat.Value or 0
+        local strengthValue = strengthStat and strengthStat.Value or 0
 
-            local rebirthCount = rebirthStat and rebirthStat.Value or 0
-            local strengthValue = strengthStat and strengthStat.Value or 0
+        local multiplier = math.floor(rebirthCount / 50) + 1
 
-            local multiplier = math.floor(rebirthCount / 50) + 1
+        local statsPerWeek = baseStatsPerWeek * multiplier
+        local statsPerDay = statsPerWeek / 7
+        local statsPerMonth = statsPerWeek * 4
 
-            local statsPerWeek = baseStatsPerWeek * multiplier
-            local statsPerDay = statsPerWeek / 7
-            local statsPerMonth = statsPerWeek * 4
-            local statsReq = 2e6 + (2e6 * rebirthCount)
-
-            local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
-
-            local rebirthGoal = getRebirthGoal(rebirthCount)
-            statsFrame.RebirthLabel.Text = formatWithDots(rebirthCount) .. " / " .. formatWithDots(rebirthGoal) .. "K"
-            statsFrame.StatsLabel.Text = "Stats: " .. formatNumber(strengthValue) .. " / " .. formatNumber(statsReq)
-            statsFrame.StatsPerDayLabel.Text = "Stats per Day: " .. formatNumber(statsPerDay)
-            statsFrame.StatsPerWeekendLabel.Text = "Stats per Weekend: " .. formatNumber(statsPerWeek)
-            statsFrame.StatsPerMonthLabel.Text = "Stats per Month: " .. formatNumber(statsPerMonth)
-            statsFrame.PingLabel.Text = "Ping: " .. formatWithDots(ping) .. " ms"
+        -- Updated rebirth stat calculation
+        local statsReq
+        if rebirthCount < 10 then
+            statsReq = 1000000 + (1000000 * rebirthCount)
+        else
+            statsReq = 10000000 + ((rebirthCount - 10) * 2000000)
         end
+
+        local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+
+        local rebirthGoal = getRebirthGoal(rebirthCount)
+        statsFrame.RebirthLabel.Text = formatWithDots(rebirthCount) .. " / " .. formatWithDots(rebirthGoal) .. "K"
+        statsFrame.StatsLabel.Text = "Stats: " .. formatNumber(strengthValue) .. " / " .. formatNumber(statsReq)
+        statsFrame.StatsPerDayLabel.Text = "Stats per Day: " .. formatNumber(statsPerDay)
+        statsFrame.StatsPerWeekendLabel.Text = "Stats per Weekend: " .. formatNumber(statsPerWeek)
+        statsFrame.StatsPerMonthLabel.Text = "Stats per Month: " .. formatNumber(statsPerMonth)
+        statsFrame.PingLabel.Text = "Ping: " .. formatWithDots(ping) .. " ms"
     end
+end
+
 
     spawn(updateStats)
 
